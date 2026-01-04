@@ -1,0 +1,129 @@
+Project: Freelancer — Quick explanation and roadmap
+
+Key points / summary:
+- Purpose: A production-quality SaaS foundation for freelancers to manage clients, projects, files, invoices, and profiles. It's not primarily a portfolio website builder — it's a freelancer management product with a public profile feature.
+- Tech stack: Next.js App Router (Next 16+), TypeScript, Tailwind CSS, Framer Motion, MongoDB via Mongoose, Auth using jose/jwt, server actions for mutations, and components organized under `components/features` and `components/ui`.
+- Structure: App Router under `/app`, server logic under `/server/actions`, models in `/models`, utilities in `/lib`, and atomic UI components in `/components/ui`. Public profile pages live at `app/(public)/profile/[username]/page.tsx` and render `ProfileView` from `components/features/profile-view.tsx`.
+- Current UX: polished, resume/print-focused public profile with theme toggle, contact CTA, skills badges, featured projects grid, and print-friendly styles. Uses client-side theming from `next-themes` and framer-motion for animations.
+- Data flow: `getProfile(username)` fetches the user and featured projects server-side (server action), profile editing is in server actions (`updateProfile`). Images appear to be stored as URLs (uploads folder currently has sample files in `public/uploads`).
+
+Main focus note:
+- You asked: "main focus is not the portfolio website maker" — understood. The product is a freelancer management SaaS where public profiles are a feature. We'll prioritize features that make the product a robust, scalable SaaS while making the public profile component (view + customization) far more powerful and conversion-focused.
+
+10 high-impact updates to make this project ~10x better (prioritized):
+1) Move file storage to cloud+CDN (S3/Backblaze + Cloudflare) with signed URLs and background uploads
+   - Why: Scalability, secure large file handling, faster load times for project screenshots and attachments.
+   - Quick wins: Implement server-side signed upload endpoints, replace local file refs with CDN URLs.
+
+2) Add payments & invoicing workflow (Stripe): invoices, payment links, webhooks, receipts, and accounting export
+   - Why: Turns the app into a revenue-producing product. Invoices + payments are core for freelancers.
+   - Quick wins: Add Stripe Checkout links and webhook handling for invoice status updates.
+
+3) Harden auth & expand identity options: magic links, OAuth (GitHub/Google), email verification, and account recovery
+   - Why: Improves conversion (fewer friction points) and security for a production SaaS.
+   - Quick wins: Magic link flow + session handling and auditing for suspicious logins.
+
+4) Make public profiles customizable & template-driven (100x profile improvement)
+   - Why: High-visibility, conversion-focused feature. Let users craft a landing page that sells their services.
+   - Components to add: theme customizer (colors, fonts, layout), modular sections (Hero, About, Projects, Testimonials, Services, Contact/Hire CTA), rich media galleries, project filters (by tag, year, tech), SEO metadata editor, JSON-LD structured data, shareable link & embed code, and PDF export.
+
+5) Add advanced search, tags, and saved filters for projects/clients (global search + filtering)
+   - Why: Improves productivity and discoverability inside the app.
+
+6) Performance & SEO optimizations
+   - Why: Faster load times, better SERP visibility for public profiles.
+   - Quick wins: Image optimization, prefetch critical assets, Lighthouse goals, SSR/meta improvements for public pages.
+
+7) Tests, CI, and PR checks (GitHub Actions)
+   - Why: Reliability and confidence to ship; required for investor-ready code.
+   - Quick wins: Unit tests for server actions, integration tests for key flows (auth, profile update, getProfile), and a lint/format CI step.
+
+8) Turn single-user into multi-tenant/team-ready with roles + billing
+   - Why: Startup feature — supports agencies and teams, enables per-seat billing.
+
+9) Observability & analytics for product / user funnels
+   - Why: Understand onboarding drop-offs and feature usage — critical for growth.
+   - Quick wins: Track events (signup, profile publish, invoice paid) and show simple dashboard metrics.
+
+10) Monetization & onboarding UX: create templates, marketplace, free/paid tiers, simple onboarding wizard
+   - Why: Converts visitors into paying users; makes the product startup-worthy.
+
+Antigravity prompt — instruct this AI-assisted code change tool to implement the improvements and massively upgrade the public profile UI
+(Use the prompt below exactly when you ask Antigravity or a similar code-writing assistant to make the changes.)
+
+--- Antigravity Prompt Start ---
+Goal: Turn the Freelancer repo into a production-grade, startup-ready SaaS with a dramatically improved public profile experience and infrastructure upgrades. The tool should produce PR-sized, test-covered, and deployable changes. Prioritize profile UI improvements, storage/hosting, payments, and authentication.
+
+Workstreams & Acceptance Criteria (make small PRs, each with tests and a clear changelog):
+1) Cloud storage & CDN
+   - Add S3-compatible backend (configurable via env). Implement signed upload URL endpoint (/api/uploads/signed) and server-side helper to generate signed GET URLs for display.
+   - Replace local public/uploads usage with CDN-backed URLs in `ProfileView` and project screenshots.
+   - Tests: unit tests for signed URL generation and integration test simulating an upload URL request.
+
+2) Stripe payments & invoices
+   - Add Stripe integration for creating payment links for invoices and a webhook endpoint to update invoice status in MongoDB.
+   - Update Invoice model to store stripeCharge/stripeSession ids and paid status.
+   - Tests: webhook handler unit tests and invoice status change test.
+
+3) Auth enhancements
+   - Add magic-link email login and optional OAuth (GitHub/Google). Ensure email verification flows and session management are secure.
+   - Tests: auth flows unit tests (token creation/validation).
+
+4) Public Profile: New feature set (high priority)
+   - Add a `ProfileBuilder` UI under `components/features/profile-builder/*` that allows users to:
+       * Select a template (minimal, showcase, resume, agency)
+       * Reorder sections (drag & drop) and toggle sections on/off
+       * Edit SEO metadata (title, description, OpenGraph image) and enable/disable indexing
+       * Color theme customizer (primary, accent, background) with a live preview
+       * Add Testimonials and Services, and mark Projects as featured or case studies
+   - Create new `PublicProfile` components:
+       * `Hero` (hero with CTA), `ProjectGallery` (masonry/grid with filters and search), `TestimonialCarousel`, `ContactPanel` (hire button & contact form that can create a lead), `ThemePreview`.
+   - Improvements to `ProfileView`:
+       * Add filter UI for projects by tag/skill/year and full-text search; persist saved filters per user.
+       * Allow visitors to toggle layout (list/grid), and a compact print-friendly resume toggle.
+       * Add share button (copy link), social meta tags (OpenGraph, Twitter card), and JSON-LD structured data for Person/ProfessionalService.
+   - Tests: visual regression snapshots (if your tool supports), unit tests for builder state, and E2E test for saving + rendering a public profile.
+
+5) Product & infra
+   - Add GH Actions with: lint, type-check, test, and a simple build step. Add a staging branch deploy script.
+   - Add basic analytics events and a small `Usage` dashboard route for admins.
+
+Deliverables per PR:
+- Small focused PR with a clear title, description, migration notes, and tests. Add fixtures/seeds for demo accounts.
+- Each PR should include at least one unit test and run successfully in CI.
+
+Developer details & constraints:
+- Use existing stack: Next.js App Router, TypeScript, Tailwind. Use Mongoose for DB changes. Keep server actions where appropriate.
+- Configuration must be env-driven (S3_BUCKET, S3_REGION, STRIPE_SECRET, NEXT_PUBLIC_STRIPE_PK, OAUTH_CLIENTS, ANALYTICS_KEY).
+- Use progressive enhancement: public profile must fully render without JS (server-rendered metadata and essential HTML for SEO), but the builder and live preview can be client-side.
+- Branching & commits: create feature branches named `feature/<short-desc>` (e.g., `feature/profile-builder`), and craft commit messages in imperative tense.
+
+Priority list (what to do first):
+1. S3 uploads & CDN URLs (PR 1)
+2. Public profile improvements: Project filters + metadata (PR 2)
+3. Theme builder & templates (PR 3)
+4. Stripe invoices & webhooks (PR 4)
+5. Auth enhancements (PR 5)
+
+Acceptance for the profile improvements specifically:
+- User can open Settings -> Profile Builder, select a template, pick colors, toggle sections, mark projects featured, save and publish. The public profile URL shows the new layout, includes OG tags, and passes a Lighthouse SEO check for metadata and structured data. Project filters work client and server-side and are bookmarkable (URL query params).
+
+--- Antigravity Prompt End ---
+
+Next steps & priorities (short roadmap):
+1) Immediate (1-2 weeks): S3 uploads, public profile project filters, basic theme toggles, and Stripe basic checkout links.
+2) Near-term (2-8 weeks): Profile builder UI, templates, OAuth + magic links, Stripe webhooks + invoice automation, tests & CI.
+3) Longer-term (8-16 weeks): Multi-tenant/teams, advanced analytics, marketplace/monetization features, growth experiments (email campaigns, referrals).
+
+Metrics & success signals to monitor:
+- Activation rate (signup -> publish profile)
+- Conversion (publish profile -> paid plan)
+- Time-to-first-invoice
+- Profile view → contact/hire CTA conversion rate
+
+Notes / assumptions made while writing this file:
+- The repo uses Next.js App Router and server actions; public profiles are rendered server-side but currently rely on client components for interactive bits.
+- Images are currently referenced as URLs — to scale, a cloud object store + CDN is preferred.
+- The project already has a demo seed endpoint, and database modeling is via Mongoose.
+
+If you want, I can: (A) generate the first Antigravity PR (S3 + signed uploads + tests), (B) scaffold the ProfileBuilder components and routes, or (C) implement Stripe invoice webhook handling — tell me which to start and I'll create the branches, files, and tests now.

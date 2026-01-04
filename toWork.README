@@ -1,0 +1,93 @@
+1) Hero image uploader (High impact — small/medium)
+Why: Makes Showcase and Editable themes feel modern and lets users personalize their profile immediately.
+Files to touch: ProfileEditor.tsx, ThemeShowcase.tsx, ThemeEditable.tsx, route.ts.
+Steps:
+Add a file input + preview in ProfileEditor.
+Call /api/uploads/signed to get a signed PUT URL (existing route).
+PUT the image to the signed URL and set config.heroBackground to the uploaded URL.
+Call updateProfileConfig(config) to persist.
+Edge cases: large files (client-side size limit), image type validation, show upload progress, fallback if signed route not configured.
+ETA: 2–6 hours.
+
+2) Migrate uploads to S3/CDN (Medium impact — medium effort)
+Why: Scales storage and speeds delivery (CDN), necessary for public profiles and large files.
+Files to touch: server/s3.ts (or create), route.ts, model fields referencing file URLs.
+Steps:
+Add server-side S3 helpers (signed URL generation).
+Update upload route to generate S3 signed URLs.
+Replace uses of /public/uploads/* with external CDN URLs in profile rendering.
+Env: S3_BUCKET, S3_REGION, S3_KEY, S3_SECRET, CDN_URL.
+ETA: 1–2 days (incl. testing).
+
+
+3) Stripe integration and invoice payments (High impact — medium/high)
+Why: Monetization & real payments — let clients pay invoices and freelancers accept money.
+Files to touch: invoice.ts, app/api/payments/*, Invoice.ts, app/(dashboard)/invoices/*.
+Steps:
+Add Stripe server endpoints to create Checkout Sessions.
+Add webhook handler to mark invoices paid.
+Add UI to pay invoices and show payment status.
+Security: verify webhooks, store payment metadata.
+ETA: 1–3 days.
+
+
+4) Auth hardening & sessions (Medium impact — medium)
+Why: Improve security: rotate/refresh tokens, set secure cookies, prevent session fixation.
+Files: auth.ts, app/api/auth/*.
+Steps:
+Review cookie flags (HttpOnly, Secure, SameSite).
+Add token rotation or short-lived JWT + refresh endpoint.
+Add rate limiting for login/signup endpoints.
+ETA: 4–8 hours.
+
+
+5) Two‑way live editor sync + autosave (High UX impact — small/medium)
+Why: Make the left sidebar and inline live editor reflect the same state and autosave to the DB.
+Files: ProfileEditor.tsx, ThemeEditable.tsx, profile-config.ts.
+Steps:
+Lift the editable user/projects state into ProfileEditor.
+Pass state + callbacks into ThemeEditable.
+Debounce autosave to updateProfileConfig.
+Edge cases: conflict resolution when multiple tabs edit same profile.
+ETA: 4–8 hours.
+
+
+6) Add more polished templates & theme presets (Medium impact — medium)
+Why: Templates help users quickly create beautiful profiles (Agency, Grid, Minimal).
+Files: components/layouts/profile/*.tsx, ProfileEditor.tsx theme list.
+Steps:
+Design 2–3 new templates.
+Ensure each reads profileConfig fields (colors, fonts, heroBackground, CTA).
+Add live preview toggles.
+ETA: 1–3 days (design + implementation).
+
+
+7) CI, linting, and tests (Critical for quality — small/medium)
+Why: Prevent regressions and enforce code quality.
+Files: .github/workflows/ci.yml, jest.config.js, __tests__/server/actions.test.ts.
+Steps:
+Add GitHub Actions workflow for node build, typecheck, lint, tests.
+Add unit tests for updateProfileConfig, model validation, auth.
+Add basic E2E smoke test (Playwright or Cypress) for key flows (signup, profile update).
+ETA: 1–2 days.
+
+8) Accessibility (A11y) & SEO improvements (Important for discoverability — small)
+Why: Profiles should be accessible and shareable.
+Files: page.tsx, components/layouts/profile/*.
+Steps:
+Run an a11y audit (axe).
+Add ARIA labels, improved keyboard navigation.
+Add OG meta tags and a dynamic OG image generation (or via prerender).
+ETA: 4–8 hours.
+
+
+9) Analytics & error monitoring (Operational importance — small)
+Why: Track user behavior and catch runtime errors in production.
+Files: layout.tsx, utils.ts, server error handling.
+Steps:
+Add PostHog/GA snippet and event calls for profile views, clicks.
+Integrate Sentry for errors and performance monitoring.
+ETA: 2–6 hours.
+
+
+
