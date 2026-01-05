@@ -7,6 +7,7 @@ import { authOptions } from "@/lib/auth-options";
 import connectToDatabase from "@/lib/db";
 import { Resume } from "@/models/Resume";
 import { redirect } from "next/navigation";
+import { ResumeThumbnail } from "@/components/resume-thumbnail";
 
 async function getResumes(userId: string) {
     await connectToDatabase();
@@ -54,18 +55,10 @@ export default async function ResumesPage() {
                                 <p className="text-xs text-muted-foreground">Updated: {new Date(resume.updatedAt).toLocaleDateString()}</p>
                             </CardHeader>
                             <CardContent>
-                                <div className="aspect-[210/297] bg-white border rounded shadow-sm flex items-center justify-center text-muted-foreground text-xs overflow-hidden relative">
-                                    {/* Thumbnail placeholder - could be iframe or image in future */}
-                                    <div className="absolute inset-0 bg-muted/10 p-2 opacity-50 pointer-events-none select-none">
-                                        <div className="w-full h-4 bg-black/10 mb-2 rounded"></div>
-                                        <div className="w-2/3 h-4 bg-black/10 mb-6 rounded"></div>
-                                        <div className="space-y-2">
-                                            <div className="w-full h-2 bg-black/5 rounded"></div>
-                                            <div className="w-full h-2 bg-black/5 rounded"></div>
-                                            <div className="w-full h-2 bg-black/5 rounded"></div>
-                                        </div>
+                                <div className="aspect-[210/297] bg-gray-100 border rounded shadow-sm overflow-hidden relative">
+                                    <div className="absolute top-0 left-0 w-full h-full">
+                                        <ResumeThumbnail resume={resume} />
                                     </div>
-                                    <span>Preview</span>
                                 </div>
                             </CardContent>
                             <CardFooter className="flex justify-between">

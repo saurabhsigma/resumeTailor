@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
 import { User } from "@/models/User";
 import bcrypt from "bcryptjs";
-import { login } from "@/lib/auth";
+
 
 export async function POST(req: Request) {
     try {
@@ -22,14 +22,13 @@ export async function POST(req: Request) {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const user = await User.create({
+        await User.create({
             name,
             email,
             passwordHash: hashedPassword,
         });
 
-        await login({ id: user._id.toString(), email: user.email, name: user.name });
-
+        // No auto-login, client should redirect to login page
         return NextResponse.json({ success: true });
     } catch (error) {
         return NextResponse.json({ error: "Server error" }, { status: 500 });

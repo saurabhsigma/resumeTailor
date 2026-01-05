@@ -10,7 +10,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Trash2, Save, Download, ArrowLeft, Wand2 } from "lucide-react";
-import Link from "next/link";
+import { useRef } from "react";
+import { TemplateModern } from "@/components/resume-templates/Modern";
+import { TemplateClassic } from "@/components/resume-templates/Classic";
+import { TemplateMinimal } from "@/components/resume-templates/Minimal";
+
+const TEMPLATES = {
+    modern: TemplateModern,
+    classic: TemplateClassic,
+    minimal: TemplateMinimal,
+};
+
 import { useRouter } from "next/navigation";
 
 
@@ -103,231 +113,201 @@ export default function ResumeEditor({ initialData }: { initialData: any }) {
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-6 scroll-smooth">
-                    <div className="space-y-6 max-w-2xl mx-auto">
+                <Tabs defaultValue="content" className="flex-1 flex flex-col overflow-hidden">
+                    <div className="px-6 pt-4 bg-background border-b">
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="content">Content</TabsTrigger>
+                            <TabsTrigger value="design">Design</TabsTrigger>
+                        </TabsList>
+                    </div>
 
-                        {/* Personal Info */}
-                        <Card>
-                            <CardContent className="pt-6 space-y-4">
-                                <h3 className="font-semibold text-lg">Personal Information</h3>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>Full Name</Label>
-                                        <Input value={resume.personalInfo.fullName || ""} onChange={(e) => handleChange("personalInfo", "fullName", e.target.value)} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Email</Label>
-                                        <Input value={resume.personalInfo.email || ""} onChange={(e) => handleChange("personalInfo", "email", e.target.value)} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Phone</Label>
-                                        <Input value={resume.personalInfo.phone || ""} onChange={(e) => handleChange("personalInfo", "phone", e.target.value)} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Location</Label>
-                                        <Input value={resume.personalInfo.location || ""} onChange={(e) => handleChange("personalInfo", "location", e.target.value)} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>LinkedIn</Label>
-                                        <Input value={resume.personalInfo.linkedin || ""} onChange={(e) => handleChange("personalInfo", "linkedin", e.target.value)} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Website</Label>
-                                        <Input value={resume.personalInfo.website || ""} onChange={(e) => handleChange("personalInfo", "website", e.target.value)} />
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        {/* Summary */}
-                        <Card>
-                            <CardContent className="pt-6 space-y-4">
-                                <div className="flex justify-between items-center">
-                                    <h3 className="font-semibold text-lg">Professional Summary</h3>
-                                    <Button variant="outline" size="sm" className="text-xs">
-                                        <Wand2 className="mr-2 h-3 w-3" />
-                                        AI Enhance
-                                    </Button>
-                                </div>
-                                <Textarea
-                                    value={resume.summary || ""}
-                                    onChange={(e) => setResume({ ...resume, summary: e.target.value })}
-                                    className="min-h-[100px]"
-                                />
-                            </CardContent>
-                        </Card>
-
-                        {/* Experience */}
-                        <Card>
-                            <CardContent className="pt-6 space-y-4">
-                                <div className="flex justify-between items-center">
-                                    <h3 className="font-semibold text-lg">Experience</h3>
-                                    <Button variant="secondary" size="sm" onClick={() => addItem("experience", { company: "", role: "", startDate: "", endDate: "", description: "" })}>
-                                        <Plus className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                                {resume.experience.map((exp: any, index: number) => (
-                                    <div key={index} className="p-4 border rounded-lg space-y-4 relative group">
-                                        <Button variant="ghost" size="icon" className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-destructive" onClick={() => removeItem("experience", index)}>
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <Label>Company</Label>
-                                                <Input value={exp.company || ""} onChange={(e) => handleArrayChange("experience", index, "company", e.target.value)} />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label>Role</Label>
-                                                <Input value={exp.role || ""} onChange={(e) => handleArrayChange("experience", index, "role", e.target.value)} />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label>Start Date</Label>
-                                                <Input value={exp.startDate || ""} onChange={(e) => handleArrayChange("experience", index, "startDate", e.target.value)} placeholder="MM/YYYY" />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label>End Date</Label>
-                                                <Input value={exp.endDate || ""} onChange={(e) => handleArrayChange("experience", index, "endDate", e.target.value)} placeholder="Present" />
-                                            </div>
+                    <TabsContent value="content" className="flex-1 overflow-y-auto p-6 scroll-smooth">
+                        <div className="space-y-6 max-w-2xl mx-auto">
+                            {/* Personal Info */}
+                            <Card>
+                                <CardContent className="pt-6 space-y-4">
+                                    <h3 className="font-semibold text-lg">Personal Information</h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label>Full Name</Label>
+                                            <Input value={resume.personalInfo.fullName || ""} onChange={(e) => handleChange("personalInfo", "fullName", e.target.value)} />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label>Description</Label>
-                                            <Textarea value={exp.description || ""} onChange={(e) => handleArrayChange("experience", index, "description", e.target.value)} />
+                                            <Label>Email</Label>
+                                            <Input value={resume.personalInfo.email || ""} onChange={(e) => handleChange("personalInfo", "email", e.target.value)} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Phone</Label>
+                                            <Input value={resume.personalInfo.phone || ""} onChange={(e) => handleChange("personalInfo", "phone", e.target.value)} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Location</Label>
+                                            <Input value={resume.personalInfo.location || ""} onChange={(e) => handleChange("personalInfo", "location", e.target.value)} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>LinkedIn</Label>
+                                            <Input value={resume.personalInfo.linkedin || ""} onChange={(e) => handleChange("personalInfo", "linkedin", e.target.value)} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Website</Label>
+                                            <Input value={resume.personalInfo.website || ""} onChange={(e) => handleChange("personalInfo", "website", e.target.value)} />
                                         </div>
                                     </div>
-                                ))}
-                            </CardContent>
-                        </Card>
+                                </CardContent>
+                            </Card>
 
-                        {/* Education */}
-                        <Card>
-                            <CardContent className="pt-6 space-y-4">
-                                <div className="flex justify-between items-center">
-                                    <h3 className="font-semibold text-lg">Education</h3>
-                                    <Button variant="secondary" size="sm" onClick={() => addItem("education", { school: "", degree: "", startDate: "", endDate: "" })}>
-                                        <Plus className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                                {resume.education.map((edu: any, index: number) => (
-                                    <div key={index} className="p-4 border rounded-lg space-y-4 relative group">
-                                        <Button variant="ghost" size="icon" className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-destructive" onClick={() => removeItem("education", index)}>
-                                            <Trash2 className="h-4 w-4" />
+                            {/* Summary */}
+                            <Card>
+                                <CardContent className="pt-6 space-y-4">
+                                    <div className="flex justify-between items-center">
+                                        <h3 className="font-semibold text-lg">Professional Summary</h3>
+                                        <Button variant="outline" size="sm" className="text-xs">
+                                            <Wand2 className="mr-2 h-3 w-3" />
+                                            AI Enhance
                                         </Button>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <Label>School</Label>
-                                                <Input value={edu.school || ""} onChange={(e) => handleArrayChange("education", index, "school", e.target.value)} />
+                                    </div>
+                                    <Textarea
+                                        value={resume.summary || ""}
+                                        onChange={(e) => setResume({ ...resume, summary: e.target.value })}
+                                        className="min-h-[100px]"
+                                    />
+                                </CardContent>
+                            </Card>
+
+                            {/* Experience */}
+                            <Card>
+                                <CardContent className="pt-6 space-y-4">
+                                    <div className="flex justify-between items-center">
+                                        <h3 className="font-semibold text-lg">Experience</h3>
+                                        <Button variant="secondary" size="sm" onClick={() => addItem("experience", { company: "", role: "", startDate: "", endDate: "", description: "" })}>
+                                            <Plus className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                    {resume.experience.map((exp: any, index: number) => (
+                                        <div key={index} className="p-4 border rounded-lg space-y-4 relative group">
+                                            <Button variant="ghost" size="icon" className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-destructive" onClick={() => removeItem("experience", index)}>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <Label>Company</Label>
+                                                    <Input value={exp.company || ""} onChange={(e) => handleArrayChange("experience", index, "company", e.target.value)} />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Role</Label>
+                                                    <Input value={exp.role || ""} onChange={(e) => handleArrayChange("experience", index, "role", e.target.value)} />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Start Date</Label>
+                                                    <Input value={exp.startDate || ""} onChange={(e) => handleArrayChange("experience", index, "startDate", e.target.value)} placeholder="MM/YYYY" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>End Date</Label>
+                                                    <Input value={exp.endDate || ""} onChange={(e) => handleArrayChange("experience", index, "endDate", e.target.value)} placeholder="Present" />
+                                                </div>
                                             </div>
                                             <div className="space-y-2">
-                                                <Label>Degree</Label>
-                                                <Input value={edu.degree || ""} onChange={(e) => handleArrayChange("education", index, "degree", e.target.value)} />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label>Start Date</Label>
-                                                <Input value={edu.startDate || ""} onChange={(e) => handleArrayChange("education", index, "startDate", e.target.value)} placeholder="MM/YYYY" />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label>End Date</Label>
-                                                <Input value={edu.endDate || ""} onChange={(e) => handleArrayChange("education", index, "endDate", e.target.value)} placeholder="MM/YYYY" />
+                                                <Label>Description</Label>
+                                                <Textarea value={exp.description || ""} onChange={(e) => handleArrayChange("experience", index, "description", e.target.value)} />
                                             </div>
                                         </div>
+                                    ))}
+                                </CardContent>
+                            </Card>
+
+                            {/* Education */}
+                            <Card>
+                                <CardContent className="pt-6 space-y-4">
+                                    <div className="flex justify-between items-center">
+                                        <h3 className="font-semibold text-lg">Education</h3>
+                                        <Button variant="secondary" size="sm" onClick={() => addItem("education", { school: "", degree: "", startDate: "", endDate: "" })}>
+                                            <Plus className="h-4 w-4" />
+                                        </Button>
                                     </div>
-                                ))}
-                            </CardContent>
-                        </Card>
+                                    {resume.education.map((edu: any, index: number) => (
+                                        <div key={index} className="p-4 border rounded-lg space-y-4 relative group">
+                                            <Button variant="ghost" size="icon" className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-destructive" onClick={() => removeItem("education", index)}>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <Label>School</Label>
+                                                    <Input value={edu.school || ""} onChange={(e) => handleArrayChange("education", index, "school", e.target.value)} />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Degree</Label>
+                                                    <Input value={edu.degree || ""} onChange={(e) => handleArrayChange("education", index, "degree", e.target.value)} />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Start Date</Label>
+                                                    <Input value={edu.startDate || ""} onChange={(e) => handleArrayChange("education", index, "startDate", e.target.value)} placeholder="MM/YYYY" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>End Date</Label>
+                                                    <Input value={edu.endDate || ""} onChange={(e) => handleArrayChange("education", index, "endDate", e.target.value)} placeholder="MM/YYYY" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </CardContent>
+                            </Card>
 
-                        {/* Skills */}
-                        <Card>
-                            <CardContent className="pt-6 space-y-4">
-                                <h3 className="font-semibold text-lg">Skills</h3>
-                                <Textarea
-                                    value={resume.skills.join(", ")}
-                                    onChange={(e) => setResume({ ...resume, skills: e.target.value.split(",").map(s => s.trim()) })}
-                                    placeholder="Comma separated (e.g. React, Node.js, Python)"
-                                />
-                            </CardContent>
-                        </Card>
+                            {/* Skills */}
+                            <Card>
+                                <CardContent className="pt-6 space-y-4">
+                                    <h3 className="font-semibold text-lg">Skills</h3>
+                                    <Textarea
+                                        value={resume.skills.join(", ")}
+                                        onChange={(e) => setResume({ ...resume, skills: e.target.value.split(",").map(s => s.trim()) })}
+                                        placeholder="Comma separated (e.g. React, Node.js, Python)"
+                                    />
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </TabsContent>
 
-                    </div>
-                </div>
+                    <TabsContent value="design" className="flex-1 overflow-y-auto p-6">
+                        <div className="grid grid-cols-2 gap-6 max-w-2xl mx-auto">
+                            {Object.keys(TEMPLATES).map((theme) => (
+                                <div
+                                    key={theme}
+                                    className={`cursor-pointer group relative rounded-lg overflow-hidden border-2 transition-all ${resume.theme === theme ? "border-blue-600 ring-2 ring-blue-600 ring-offset-2" : "border-muted hover:border-blue-400"}`}
+                                    onClick={() => setResume({ ...resume, theme })}
+                                >
+                                    <div className="aspect-[3/4] bg-muted relative">
+                                        <div className="absolute inset-0 flex items-center justify-center text-sm font-medium uppercase tracking-widest text-muted-foreground bg-white/50 backdrop-blur-sm opacity-100 group-hover:opacity-0 transition-opacity">
+                                            {theme}
+                                        </div>
+                                        {/* In real app, we would render a scaled-down version of the template here, but for now just the name is fine or a static image */}
+                                    </div>
+                                    <div className="p-3 bg-card text-center font-medium capitalize border-t">
+                                        {theme}
+                                    </div>
+                                    {resume.theme === theme && (
+                                        <div className="absolute top-2 right-2 bg-blue-600 text-white p-1 rounded-full shadow-lg">
+                                            <div className="h-3 w-3 bg-white rounded-full" />
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </TabsContent>
+                </Tabs>
             </div>
 
             {/* Right Panel - Preview */}
             <div className="w-1/2 bg-muted/30 p-8 overflow-y-auto flex justify-center">
-                <div
-                    ref={componentRef}
-                    id="resume-preview"
-                    className="bg-white text-black shadow-2xl w-[210mm] min-h-[297mm] p-[15mm] space-y-4 text-sm"
-                    style={{ fontSize: "1rem", lineHeight: "1.5" }} // Base styles to prevent tailwind resets from making it look weird
-                >
-                    {/* Header */}
-                    <div className="text-center border-b pb-4 mb-4">
-                        <h1 className="text-3xl font-bold uppercase mb-2">{resume.personalInfo.fullName}</h1>
-                        <div className="flex justify-center gap-4 text-xs text-gray-600 flex-wrap">
-                            {resume.personalInfo.email && <span>{resume.personalInfo.email}</span>}
-                            {resume.personalInfo.phone && <span>| {resume.personalInfo.phone}</span>}
-                            {resume.personalInfo.location && <span>| {resume.personalInfo.location}</span>}
-                            {resume.personalInfo.linkedin && <span>| {resume.personalInfo.linkedin}</span>}
-                            {resume.personalInfo.website && <span>| {resume.personalInfo.website}</span>}
-                        </div>
+                <div className="origin-top scale-[0.7] md:scale-90 transition-transform">
+                    <div
+                        ref={componentRef}
+                        id="resume-preview"
+                        className="bg-white shadow-2xl w-[210mm] min-h-[297mm] overflow-hidden"
+                    >
+                        {(() => {
+                            const SelectedTemplate = TEMPLATES[resume.theme as keyof typeof TEMPLATES] || TemplateModern;
+                            return <SelectedTemplate data={resume} />;
+                        })()}
                     </div>
-
-                    {/* Summary */}
-                    {resume.summary && (
-                        <div className="mb-4">
-                            <h2 className="text-sm font-bold uppercase border-b border-black mb-2 tracking-wider">Professional Summary</h2>
-                            <p className="text-sm text-justify">{resume.summary}</p>
-                        </div>
-                    )}
-
-                    {/* Experience */}
-                    {resume.experience.length > 0 && (
-                        <div className="mb-4">
-                            <h2 className="text-sm font-bold uppercase border-b border-black mb-2 tracking-wider">Experience</h2>
-                            <div className="space-y-3">
-                                {resume.experience.map((exp: any, i: number) => (
-                                    <div key={i}>
-                                        <div className="flex justify-between font-semibold">
-                                            <span>{exp.role}</span>
-                                            <span className="text-xs">{exp.startDate} - {exp.endDate || "Present"}</span>
-                                        </div>
-                                        <div className="text-xs font-semibold">{exp.company}</div>
-                                        <p className="text-sm mt-1 whitespace-pre-wrap">{exp.description}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Education */}
-                    {resume.education.length > 0 && (
-                        <div className="mb-4">
-                            <h2 className="text-sm font-bold uppercase border-b border-black mb-2 tracking-wider">Education</h2>
-                            <div className="space-y-3">
-                                {resume.education.map((edu: any, i: number) => (
-                                    <div key={i}>
-                                        <div className="flex justify-between font-semibold">
-                                            <span>{edu.school}</span>
-                                            <span className="text-xs">{edu.startDate} - {edu.endDate}</span>
-                                        </div>
-                                        <div className="text-sm">{edu.degree} {edu.field && `in ${edu.field}`}</div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Skills */}
-                    {resume.skills.length > 0 && (
-                        <div className="mb-4">
-                            <h2 className="text-sm font-bold uppercase border-b border-black mb-2 tracking-wider">Skills</h2>
-                            <div className="flex flex-wrap gap-1">
-                                {resume.skills.map((skill: string, i: number) => (
-                                    <span key={i} className="text-sm">{skill}{i < resume.skills.length - 1 ? " • " : ""}</span>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
                 </div>
             </div>
         </div>

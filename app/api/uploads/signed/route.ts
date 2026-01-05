@@ -12,9 +12,8 @@ export async function POST(req: NextRequest) {
         const { filename } = await req.json();
 
         // Create a unique public_id
-        // Using timestamp + sanitized filename
         const timestamp = Math.round(new Date().getTime() / 1000);
-        const public_id = `freelancer_os/${timestamp}-${filename.replace(/\s+/g, "_").split('.')[0]}`;
+        const public_id = `freelancer_os/${session.user.id}/${timestamp}-${filename.replace(/\s+/g, "_").split('.')[0]}`;
 
         const signature = cloudinary.utils.api_sign_request({
             timestamp,
@@ -35,4 +34,5 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Failed to generate signature" }, { status: 500 });
     }
 }
+
 

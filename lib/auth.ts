@@ -1,5 +1,4 @@
-export const auth = {
-    // Mock for now, will implement NextAuth
-    user: null,
-    session: null
-}
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
+
+export const getSession = () => getServerSession(authOptions);
