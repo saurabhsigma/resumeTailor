@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, FileText, Globe, LogOut, Moon, Sun, Monitor, Wand2 } from "lucide-react";
+import { LayoutDashboard, FileText, Globe, LogOut, Moon, Sun, Monitor, Wand2, Gauge } from "lucide-react";
 import { useTheme } from "next-themes";
 import {
     DropdownMenu,
@@ -53,6 +53,12 @@ export default function DashboardLayout({
                         <Button variant={pathname.includes("/tailor") ? "secondary" : "ghost"} className="w-full justify-start">
                             <Wand2 className="mr-2 h-4 w-4" />
                             Smart Tailor
+                        </Button>
+                    </Link>
+                    <Link href="/dashboard/ats">
+                        <Button variant={pathname.includes("/ats") ? "secondary" : "ghost"} className="w-full justify-start">
+                            <Gauge className="mr-2 h-4 w-4" />
+                            ATS Checker
                         </Button>
                     </Link>
                 </nav>
