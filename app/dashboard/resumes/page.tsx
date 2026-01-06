@@ -8,6 +8,7 @@ import connectToDatabase from "@/lib/db";
 import { Resume } from "@/models/Resume";
 import { redirect } from "next/navigation";
 import { ResumeThumbnail } from "@/components/resume-thumbnail";
+import { DeleteResourceButton } from "@/components/delete-resource-btn";
 
 async function getResumes(userId: string) {
     await connectToDatabase();
@@ -68,9 +69,7 @@ export default async function ResumesPage() {
                                         Edit
                                     </Button>
                                 </Link>
-                                <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
+                                <DeleteResourceButton id={resume._id} resourceType="resumes" />
                             </CardFooter>
                         </Card>
                     ))}

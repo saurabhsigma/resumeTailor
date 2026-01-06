@@ -1,13 +1,18 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
 export default function CreateResumePage() {
     const router = useRouter();
 
+    const hasCreated = useRef(false);
+
     useEffect(() => {
+        if (hasCreated.current) return;
+        hasCreated.current = true;
+
         const createResume = async () => {
             try {
                 const res = await fetch("/api/resumes", {

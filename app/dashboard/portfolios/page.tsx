@@ -7,6 +7,7 @@ import { authOptions } from "@/lib/auth-options";
 import connectToDatabase from "@/lib/db";
 import { Portfolio } from "@/models/Portfolio";
 import { redirect } from "next/navigation";
+import { DeleteResourceButton } from "@/components/delete-resource-btn";
 
 async function getPortfolios(userId: string) {
     await connectToDatabase();
@@ -74,6 +75,7 @@ export default async function PortfoliosPage() {
                                         View
                                     </Button>
                                 </Link>
+                                <DeleteResourceButton id={portfolio._id} resourceType="portfolios" />
                             </CardFooter>
                         </Card>
                     ))}

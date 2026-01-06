@@ -1,7 +1,7 @@
 // @ts-nocheck
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useReactToPrint } from "react-to-print";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Trash2, Save, Download, ArrowLeft, Wand2 } from "lucide-react";
-import { useRef } from "react";
 import { TemplateModern } from "@/components/resume-templates/Modern";
 import { TemplateClassic } from "@/components/resume-templates/Classic";
 import { TemplateMinimal } from "@/components/resume-templates/Minimal";
@@ -22,13 +21,19 @@ const TEMPLATES = {
 };
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 
 export default function ResumeEditor({ initialData }: { initialData: any }) {
     const [resume, setResume] = useState(initialData);
     const [isSaving, setIsSaving] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
     const router = useRouter();
     const componentRef = useRef(null);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     const handlePrint = useReactToPrint({
         // @ts-ignore - React-to-print types might be slightly off for v3 with React 19
@@ -36,6 +41,10 @@ export default function ResumeEditor({ initialData }: { initialData: any }) {
         contentRef: componentRef,
         documentTitle: resume.title || "Resume",
     });
+
+    if (!isMounted) {
+        return null;
+    }
 
     const handleChange = (section: string, field: string, value: string) => {
         setResume((prev: any) => ({

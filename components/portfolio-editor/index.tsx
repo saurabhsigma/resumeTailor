@@ -1,7 +1,7 @@
 // @ts-nocheck
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ImageUpload } from "@/components/ui/image-upload";
@@ -30,6 +30,15 @@ const TEMPLATES = {
 export default function PortfolioEditor({ initialData }: { initialData: any }) {
     const [portfolio, setPortfolio] = useState(initialData);
     const [isSaving, setIsSaving] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    if (!isMounted) {
+        return null;
+    }
 
     const handleChange = (section: string, field: string, value: string) => {
         setPortfolio((prev: any) => ({

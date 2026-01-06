@@ -37,7 +37,7 @@ export const PortfolioTemplate4 = ({ data }: { data: any }) => {
 
                 <section className="mb-32">
                     <div className="md:flex justify-between items-end mb-16 border-b border-slate-800 pb-4">
-                        <h2 className="text-4xl font-bold">Resent Works</h2>
+                        <h2 className="text-4xl font-bold">Selected Works</h2>
                         <span className="text-slate-500 font-mono">01 — {String(projects.length).padStart(2, '0')}</span>
                     </div>
 
