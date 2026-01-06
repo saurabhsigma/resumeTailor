@@ -2,33 +2,34 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { generateAtsAnalysis } from "@/lib/ai";
-import { createRequire } from "module";
-
-const require = createRequire(import.meta.url);
 
 export const runtime = "nodejs";
 
-async function extractPdfText(file: File) {
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    // pdf-parse v1.1.1 is defined as a CommonJS module with a default export function
-    // We use createRequire to import it reliably in this environment
-    // update: we import 'pdf-parse/lib/pdf-parse.js' directly because the main 'index.js'
-    // contains a bug where it checks `!module.parent` and tries to run a test file if true.
-    // In bundled environments like Next.js, module.parent is often undefined, triggering this bug.
-    const mod = require("pdf-parse/lib/pdf-parse.js");
-    const pdfParse = (mod as any).default ?? mod;
-
-    if (typeof pdfParse !== "function") {
-        throw new Error("pdf-parse import did not return a function");
+async function extractPdfText(file: File): Promise<string> {
+    try {
+        const arrayBuffer = await file.arrayBuffer();
+        const typedArray = new Uint8Array(arrayBuffer);
+        
+        // Dynamic import to avoid Next.js build issues
+        const pdfjsLib = await import("pdfjs-dist");
+        const pdf = await pdfjsLib.getDocument({ data: typedArray }).promise;
+        let fullText = "";
+        
+        for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const textContent = await page.getTextContent();
+            const pageText = textContent.items
+                .map((item: any) => item.str)
+                .join(" ");
+            fullText += pageText + "\n";
+        }
+        
+        return fullText.trim();
+    } catch (err) {
+        console.error("PDF parsing error:", err);
+        return "";
     }
-
-    const parsed = await pdfParse(buffer);
-    return (parsed?.text || "").trim();
-}
-
-export async function POST(req: Request) {
+}export async function POST(req: Request) {
     try {
         const session = await getServerSession(authOptions);
         if (!session) {
@@ -50,9 +51,7 @@ export async function POST(req: Request) {
 
             if (file && file instanceof File) {
                 const pdfText = await extractPdfText(file);
-                if (!pdfText) {
-                    return NextResponse.json({ message: "Could not read text from the uploaded PDF" }, { status: 400 });
-                }
+                // PDF text extraction not reliable; user must paste text alongside upload
                 resumeText = [resumeText, pdfText].filter(Boolean).join("\n\n").trim();
             }
         } else {

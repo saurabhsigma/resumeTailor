@@ -12,8 +12,10 @@ export const ResumeThumbnail = ({ resume }: { resume: any }) => {
     const SelectedTemplate = TEMPLATES[resume.theme as keyof typeof TEMPLATES] || TemplateModern;
 
     return (
-        <div className="w-[210mm] h-[297mm] bg-white overflow-hidden text-[10px] select-none pointer-events-none origin-top-left scale-[0.2]">
-            <SelectedTemplate data={resume} />
+        <div className="w-full h-full flex items-start justify-center overflow-hidden bg-white">
+            <div className="w-[210mm] h-[297mm] origin-top scale-[0.32] shadow-sm">
+                <SelectedTemplate data={resume} />
+            </div>
         </div>
     );
 };

@@ -8,6 +8,7 @@ import connectToDatabase from "@/lib/db";
 import { Portfolio } from "@/models/Portfolio";
 import { redirect } from "next/navigation";
 import { DeleteResourceButton } from "@/components/delete-resource-btn";
+import { PortfolioThumbnail } from "@/components/portfolio-thumbnail";
 
 async function getPortfolios(userId: string) {
     await connectToDatabase();
@@ -54,8 +55,11 @@ export default async function PortfoliosPage() {
                                 <p className="text-xs text-muted-foreground">Updated: {new Date(portfolio.updatedAt).toLocaleDateString()}</p>
                             </CardHeader>
                             <CardContent>
-                                <div className="aspect-video bg-muted border rounded shadow-sm flex items-center justify-center text-muted-foreground text-xs overflow-hidden relative">
-                                    <Globe className="h-8 w-8 opacity-20" />
+                                <div className="aspect-video bg-gradient-to-br from-blue-50 to-purple-50 border rounded shadow-sm overflow-hidden relative">
+                                    <PortfolioThumbnail portfolio={portfolio} />
+                                    <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-xs font-medium text-slate-700 shadow-sm">
+                                        {portfolio.theme || "template1"}
+                                    </div>
                                 </div>
                                 <div className="mt-4 flex items-center gap-2 text-sm text-blue-500">
                                     <Globe className="h-3 w-3" />

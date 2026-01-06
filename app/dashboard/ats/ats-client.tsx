@@ -165,7 +165,7 @@ export default function AtsClient({ resumes }: { resumes: any[] }) {
                     <Card>
                         <CardHeader>
                             <CardTitle>Upload a PDF or paste text</CardTitle>
-                            <CardDescription>We parse the PDF on the server and merge it with any text you add here.</CardDescription>
+                            <CardDescription>Upload a PDF resume and we'll extract the text automatically. You can also paste or edit text below.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
