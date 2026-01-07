@@ -237,26 +237,39 @@ export default function PortfolioEditor({ initialData }: { initialData: any }) {
                     </TabsContent>
 
                     <TabsContent value="design" className="flex-1 overflow-y-auto p-4">
-                        <div className="grid grid-cols-1 gap-6">
-                            {Object.keys(TEMPLATES).map((tpl) => (
-                                <div
-                                    key={tpl}
-                                    className={`cursor-pointer border-2 rounded-xl p-4 transition-all hover:shadow-md ${portfolio.templateId === tpl ? "border-blue-600 bg-blue-50/50 ring-2 ring-blue-600 ring-offset-2" : "border-muted"}`}
-                                    onClick={() => setPortfolio({ ...portfolio, templateId: tpl })}
-                                >
-                                    <div className="aspect-video bg-muted mb-3 rounded-lg flex items-center justify-center text-muted-foreground font-bold uppercase tracking-widest relative overflow-hidden group">
-                                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
-                                        {tpl}
-                                        <div className="absolute inset-0 bg-blue-600/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <p className="font-medium capitalize">{tpl.replace("template", "Template ")}</p>
-                                        {portfolio.templateId === tpl && (
-                                            <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded-full font-bold">Active</span>
-                                        )}
-                                    </div>
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label>Choose Template</Label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {Object.keys(TEMPLATES).map((templateKey) => (
+                                        <div
+                                            key={templateKey}
+                                            onClick={() => setPortfolio({ ...portfolio, theme: templateKey })}
+                                            className={`cursor-pointer border-2 rounded-lg overflow-hidden transition-all hover:border-primary ${
+                                                portfolio.theme === templateKey ? "border-primary ring-2 ring-primary/20" : "border-muted"
+                                            }`}
+                                        >
+                                            <div className="aspect-video bg-gradient-to-br from-blue-50 to-purple-50 relative">
+                                                {(templateKey === "template1" || templateKey === "template2") ? (
+                                                    <div className="w-full h-full flex items-start justify-center overflow-hidden">
+                                                        <div className="w-[1920px] h-[1080px] origin-top scale-[0.08] pointer-events-none select-none">
+                                                            {templateKey === "template1" && <PortfolioTemplate1 data={portfolio} />}
+                                                            {templateKey === "template2" && <PortfolioTemplate2 data={portfolio} />}
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">
+                                                        {templateKey.replace("template", "Template ")}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="p-2 bg-background text-center text-xs font-medium">
+                                                {templateKey.replace("template", "Template ").toUpperCase()}
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
+                            </div>
                         </div>
                     </TabsContent>
                 </Tabs>
@@ -264,7 +277,7 @@ export default function PortfolioEditor({ initialData }: { initialData: any }) {
 
             <div className="w-2/3 bg-white overflow-y-auto">
                 {(() => {
-                    const SelectedTemplate = TEMPLATES[portfolio.templateId as keyof typeof TEMPLATES] || PortfolioTemplate1;
+                    const SelectedTemplate = TEMPLATES[portfolio.theme as keyof typeof TEMPLATES] || PortfolioTemplate1;
                     return <SelectedTemplate data={portfolio} />;
                 })()}
             </div>

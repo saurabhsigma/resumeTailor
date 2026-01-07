@@ -49,7 +49,7 @@ async function callGroqAts(resumeText: string, jobDescription: string): Promise<
     const completion = await client.chat.completions.create({
         model: "llama-3.3-70b-versatile",
         temperature: 0.15,
-        max_output_tokens: 900,
+        max_tokens: 900,
         response_format: { type: "json_object" },
         messages: [
             {
@@ -130,14 +130,22 @@ export async function generateAtsAnalysis(resumeText: string, jobDescription: st
     }
 
     try {
-        return await callGroqAts(cleanedResume, cleanedJd);
+        console.log("[ATS] Attempting Groq API call...");
+        const result = await callGroqAts(cleanedResume, cleanedJd);
+        console.log("[ATS] Groq API success:", { matchScore: result.matchScore, modelUsed: result.modelUsed });
+        return result;
     } catch (groqError) {
+        console.error("[ATS] Groq API failed:", groqError);
         // fallback to Gemini
     }
 
     try {
-        return await callGeminiAts(cleanedResume, cleanedJd);
+        console.log("[ATS] Attempting Gemini API call...");
+        const result = await callGeminiAts(cleanedResume, cleanedJd);
+        console.log("[ATS] Gemini API success:", { matchScore: result.matchScore, modelUsed: result.modelUsed });
+        return result;
     } catch (geminiError) {
+        console.error("[ATS] Gemini API failed:", geminiError);
         // fallback to mock
     }
 

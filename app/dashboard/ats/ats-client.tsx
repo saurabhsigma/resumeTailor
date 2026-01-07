@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -28,6 +28,10 @@ export default function AtsClient({ resumes }: { resumes: any[] }) {
     const [analysis, setAnalysis] = useState<AtsAnalysis | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string>("");
+    const [isDragActive, setIsDragActive] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const [phase, setPhase] = useState<"idle" | "upload" | "processing">("idle");
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
 
     const canSubmit = !!jobDescription.trim() && (!!resumeText.trim() || !!resumeFile);
 
@@ -54,13 +58,41 @@ export default function AtsClient({ resumes }: { resumes: any[] }) {
             return;
         }
         const file = fileList[0];
+        const MAX_MB = 20;
         if (file.type !== "application/pdf") {
-            setError("Please upload a PDF file");
+            setError("Only PDF files are supported");
+            setResumeFile(null);
+            return;
+        }
+        if (file.size > MAX_MB * 1024 * 1024) {
+            setError(`File too large. Max ${MAX_MB}MB.`);
             setResumeFile(null);
             return;
         }
         setError("");
         setResumeFile(file);
+    };
+
+    const onDrop = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragActive(false);
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            handleFileChange(e.dataTransfer.files);
+            e.dataTransfer.clearData();
+        }
+    };
+
+    const onDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragActive(true);
+    };
+
+    const onDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragActive(false);
     };
 
     const handleSubmit = async () => {
@@ -70,36 +102,64 @@ export default function AtsClient({ resumes }: { resumes: any[] }) {
         setAnalysis(null);
 
         try {
-            let response: Response;
-
             if (resumeFile) {
+                // Use XHR to track upload progress
+                setPhase("upload");
+                setUploadProgress(0);
                 const formData = new FormData();
                 formData.append("jobDescription", jobDescription);
-                if (resumeText.trim()) {
-                    formData.append("resumeText", resumeText);
-                }
+                if (resumeText.trim()) formData.append("resumeText", resumeText);
                 formData.append("resumeFile", resumeFile);
-                response = await fetch("/api/ats", {
-                    method: "POST",
-                    body: formData,
+
+                const xhr = new XMLHttpRequest();
+                const promise = new Promise<Response>((resolve, reject) => {
+                    xhr.upload.onprogress = (event) => {
+                        if (event.lengthComputable) {
+                            const pct = Math.round((event.loaded / event.total) * 100);
+                            setUploadProgress(pct);
+                        }
+                    };
+                    xhr.onloadstart = () => setUploadProgress(0);
+                    xhr.onerror = () => reject(new Error("Network error during upload"));
+                    xhr.onload = () => {
+                        // After upload completes, we're processing on server
+                        setPhase("processing");
+                        try {
+                            const status = xhr.status;
+                            const text = xhr.responseText || "{}";
+                            const payload = JSON.parse(text);
+                            if (status >= 200 && status < 300) {
+                                resolve(new Response(JSON.stringify(payload), { status }));
+                            } else {
+                                reject(new Error(payload?.message || `ATS check failed (${status})`));
+                            }
+                        } catch (e: any) {
+                            reject(new Error("Invalid server response"));
+                        }
+                    };
+                    xhr.open("POST", "/api/ats", true);
+                    xhr.send(formData);
                 });
+
+                const response = await promise;
+                const payload = await response.json();
+                setAnalysis(payload.analysis);
             } else {
-                response = await fetch("/api/ats", {
+                const response = await fetch("/api/ats", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ resumeText, jobDescription }),
                 });
+                const payload = await response.json();
+                if (!response.ok) throw new Error(payload?.message || "ATS check failed");
+                setAnalysis(payload.analysis);
             }
-
-            const payload = await response.json();
-            if (!response.ok) {
-                throw new Error(payload?.message || "ATS check failed");
-            }
-            setAnalysis(payload.analysis);
         } catch (err: any) {
             setError(err?.message || "Something went wrong while running the ATS check");
         } finally {
             setIsLoading(false);
+            setPhase("idle");
+            setUploadProgress(0);
         }
     };
 
@@ -165,25 +225,79 @@ export default function AtsClient({ resumes }: { resumes: any[] }) {
                     <Card>
                         <CardHeader>
                             <CardTitle>Upload a PDF or paste text</CardTitle>
-                            <CardDescription>Upload a PDF resume and we'll extract the text automatically. You can also paste or edit text below.</CardDescription>
+                            <CardDescription>
+                                You can upload just a PDF (no need to paste) and we'll extract text automatically. Or paste/edit the text below.
+                            </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
-                                <Label htmlFor="resume-file" className="flex items-center gap-2">
+                                <Label className="flex items-center gap-2">
                                     <FileUp className="h-4 w-4" /> PDF Resume (optional)
                                 </Label>
-                                <Input
-                                    id="resume-file"
-                                    type="file"
-                                    accept="application/pdf"
-                                    onChange={(e) => handleFileChange(e.target.files)}
-                                />
+                                <div
+                                    onDrop={onDrop}
+                                    onDragOver={onDragOver}
+                                    onDragLeave={onDragLeave}
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className={`rounded-md border-2 border-dashed p-6 text-center cursor-pointer transition ${
+                                        isDragActive ? "border-primary bg-primary/5" : "border-muted-foreground/30 hover:bg-muted/50"
+                                    }`}
+                                >
+                                    <input
+                                        ref={fileInputRef}
+                                        id="resume-file"
+                                        type="file"
+                                        accept="application/pdf"
+                                        className="hidden"
+                                        onChange={(e) => handleFileChange(e.target.files)}
+                                    />
+                                    {resumeFile ? (
+                                        <div className="text-sm">
+                                            <p className="font-medium">{resumeFile.name}</p>
+                                            <p className="text-muted-foreground">
+                                                {(resumeFile.size / (1024 * 1024)).toFixed(2)} MB
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <div className="text-sm text-muted-foreground">
+                                            Drag & drop a PDF here, or click to browse (max 20MB)
+                                        </div>
+                                    )}
+                                </div>
+                                {isLoading && resumeFile && (
+                                    <div className="mt-2">
+                                        {phase === "upload" ? (
+                                            <div>
+                                                <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                                                    <span>Uploading...</span>
+                                                    <span>{uploadProgress}%</span>
+                                                </div>
+                                                <div className="w-full h-2 rounded bg-muted overflow-hidden">
+                                                    <div
+                                                        className="h-2 bg-primary transition-all"
+                                                        style={{ width: `${uploadProgress}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        ) : phase === "processing" ? (
+                                            <div>
+                                                <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                                                    <span>Extracting and analyzing...</span>
+                                                    <span>Working</span>
+                                                </div>
+                                                <div className="w-full h-2 rounded bg-muted overflow-hidden">
+                                                    <div className="h-2 bg-gradient-to-r from-primary to-emerald-400 animate-pulse w-1/2" />
+                                                </div>
+                                            </div>
+                                        ) : null}
+                                    </div>
+                                )}
                             </div>
                             <Textarea
                                 value={resumeText}
                                 onChange={(e) => setResumeText(e.target.value)}
                                 className="h-40"
-                                placeholder="Or paste your resume text here (Summary, Experience, Skills, Projects)."
+                                placeholder="Optional: paste resume text (we auto-extract from PDF if uploaded)."
                             />
                         </CardContent>
                     </Card>

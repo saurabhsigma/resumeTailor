@@ -1,3 +1,5 @@
+"use client";
+
 import { PortfolioTemplate1 } from "@/components/portfolio-templates/Template1";
 import { PortfolioTemplate2 } from "@/components/portfolio-templates/Template2";
 import { PortfolioTemplate3 } from "@/components/portfolio-templates/Template3";
@@ -15,6 +17,15 @@ const TEMPLATES = {
 };
 
 export const PortfolioThumbnail = ({ portfolio }: { portfolio: any }) => {
+    // Ensure we have the portfolio data with content
+    if (!portfolio?.content) {
+        return (
+            <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-400 text-sm">
+                No content
+            </div>
+        );
+    }
+
     const SelectedTemplate = TEMPLATES[portfolio.theme as keyof typeof TEMPLATES] || PortfolioTemplate1;
 
     return (
