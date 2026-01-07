@@ -16,7 +16,7 @@ export default function Home() {
             <Button variant="ghost">Login</Button>
           </Link>
           <Link href="/signup">
-            <Button variant="premium">Get Started</Button>
+            <Button variant="default" className="bg-gradient-to-r from-primary to-emerald-500 text-white shadow-md hover:opacity-90">Get Started</Button>
           </Link>
         </nav>
       </header>
@@ -38,7 +38,7 @@ export default function Home() {
             </p>
             <div className="flex justify-center gap-4">
               <Link href="/dashboard">
-                <Button size="lg" variant="premium" className="h-12 px-8 text-lg">
+                <Button size="lg" variant="default" className="h-12 px-8 text-lg bg-gradient-to-r from-primary to-emerald-500 text-white shadow-md hover:opacity-90">
                   Start Building Now <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
