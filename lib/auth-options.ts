@@ -5,6 +5,7 @@ import { User } from "@/models/User";
 import bcrypt from "bcryptjs";
 
 export const authOptions: NextAuthOptions = {
+    trustHost: true,
     providers: [
         CredentialsProvider({
             name: "Credentials",
@@ -43,6 +44,13 @@ export const authOptions: NextAuthOptions = {
         strategy: "jwt"
     },
     callbacks: {
+        async redirect({ url, baseUrl }) {
+            // Allow relative redirects and same-origin full URLs; otherwise go to dashboard
+            if (url.startsWith("/")) return `${baseUrl}${url}`;
+            const urlObj = new URL(url);
+            if (urlObj.origin === baseUrl) return url;
+            return `${baseUrl}/dashboard`;
+        },
         async session({ session, token }) {
             if (token && session.user) {
                 // @ts-ignore
