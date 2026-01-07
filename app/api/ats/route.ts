@@ -72,6 +72,8 @@ async function extractPdfText(file: File): Promise<string> {
         return fullText.trim();
     } catch (err) {
         console.error("PDF parsing error:", err);
+        console.error("PDF parsing failed. File name:", file.name, "Size:", file.size);
+        // Return empty string to allow fallback to manual text input
         return "";
     }
 }export async function POST(req: Request) {

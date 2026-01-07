@@ -11,6 +11,15 @@ export const metadata: Metadata = {
   description: "Create professional resumes and portfolios in minutes.",
 };
 
+// Ensure critical env vars are present
+if (typeof window === 'undefined') {
+  const criticalEnvs = ['MONGODB_URI', 'NEXTAUTH_SECRET', 'NEXTAUTH_URL'];
+  const missing = criticalEnvs.filter(key => !process.env[key]);
+  if (missing.length > 0) {
+    console.error('❌ Missing critical environment variables:', missing.join(', '));
+  }
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{

@@ -1,9 +1,14 @@
 import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/resumeTailor";
+const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
-    throw new Error("Please define the MONGODB_URI environment variable inside .env.local");
+    console.error("⚠️ MONGODB_URI environment variable is not defined");
+    throw new Error("Database configuration error: MONGODB_URI is required. Please set it in your deployment environment variables.");
+}
+
+if (MONGODB_URI.includes('127.0.0.1') || MONGODB_URI.includes('localhost')) {
+    console.warn("⚠️ Warning: Using localhost MongoDB connection. This will fail in production.");
 }
 
 /* Global cache to prevent multiple connections in dev mode */
