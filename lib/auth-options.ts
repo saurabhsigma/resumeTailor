@@ -5,7 +5,6 @@ import { User } from "@/models/User";
 import bcrypt from "bcryptjs";
 
 export const authOptions: NextAuthOptions = {
-    trustHost: true,
     providers: [
         CredentialsProvider({
             name: "Credentials",
