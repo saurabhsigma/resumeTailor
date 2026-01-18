@@ -32,6 +32,10 @@ async function connectToDatabase() {
         return cached.conn;
     }
 
+    if (!MONGODB_URI) {
+        throw new Error("MONGODB_URI is not defined");
+    }
+
     if (!cached.promise) {
         const opts = {
             bufferCommands: false,
