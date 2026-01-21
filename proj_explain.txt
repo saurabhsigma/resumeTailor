@@ -1,0 +1,263 @@
+RESUMETAILOR - AI-Powered Resume & Portfolio Platform
+=====================================================
+
+PROJECT OVERVIEW
+----------------
+ResumeTailor is a comprehensive full-stack SaaS application that helps job seekers create professional resumes, build portfolio websites, and optimize their applications using AI-powered tools. Built with Next.js 16, TypeScript, and MongoDB.
+
+CORE FEATURES
+-------------
+
+1. RESUME BUILDER
+   - Real-time visual editor with live preview
+   - Multiple professional templates (Modern, Classic, Minimal)
+   - Drag-and-drop section management
+   - PDF export functionality
+   - Automatic ATS-friendly formatting
+   - Responsive thumbnail previews on dashboard
+
+2. PORTFOLIO WEBSITE BUILDER
+   - 6 customizable portfolio templates
+   - Live editing with instant preview
+   - Custom subdomain support (/p/username)
+   - Hero section, About, Projects, Contact sections
+   - Image upload with Cloudinary integration
+   - One-click publishing
+
+3. ATS SCORE CHECKER
+   - Upload PDF resumes or paste text
+   - Drag-and-drop file upload with validation (max 20MB)
+   - Real-time PDF text extraction using pdfjs-dist
+   - AI-powered analysis via Groq API (llama-3.3-70b-versatile)
+   - Fallback to Google Gemini AI
+   - Structured scoring:
+     * Job description match percentage
+     * Application success rate
+     * Missing keywords detection
+     * Profile summary generation
+     * Personalized improvement suggestions
+   - Upload progress tracking
+   - Processing status indicators
+
+4. AI RESUME TAILOR
+   - Customize resume content for specific job descriptions
+   - Keyword optimization
+   - Auto-generated professional summaries
+   - Achievement bullet point generation
+
+TECHNICAL STACK
+---------------
+
+Frontend:
+- Next.js 16.0.10 (App Router)
+- React 19.2.1
+- TypeScript
+- Tailwind CSS 4
+- Radix UI components
+- Lucide icons
+- Class Variance Authority for component variants
+
+Backend:
+- Next.js API Routes
+- MongoDB with Mongoose 9.0.1
+- NextAuth v4.24.13 (JWT-based authentication)
+- bcryptjs for password hashing
+
+AI Integration:
+- Groq SDK v0.37.0 (primary LLM provider)
+- Google Generative AI v0.24.1 (fallback)
+- Model: llama-3.3-70b-versatile
+
+File Processing:
+- pdfjs-dist v3.11.174 (PDF text extraction)
+- Canvas package (PDF.js Node.js compatibility)
+- Cloudinary (image uploads and CDN)
+
+DATABASE SCHEMA
+---------------
+
+User Model:
+- name, email, passwordHash
+- image (profile picture URL)
+- created/updated timestamps
+
+Resume Model:
+- userId (reference)
+- title
+- theme (modern/classic/minimal)
+- personalInfo (fullName, email, phone, location, linkedin, portfolio)
+- summary
+- experience[] (role, company, location, startDate, endDate, description)
+- education[] (degree, field, school, location, startDate, endDate, gpa)
+- skills[]
+- projects[] (name, description, technologies[], link)
+- certifications[] (name, issuer, date)
+
+Portfolio Model:
+- userId (reference)
+- title
+- subdomain
+- theme (template1-6)
+- content:
+  * hero (title, subtitle, ctaText, ctaLink, backgroundImage)
+  * about (title, description)
+  * projects[] (title, description, imageUrl, link)
+  * contact (email)
+
+AUTHENTICATION FLOW
+-------------------
+- Credentials-based authentication via NextAuth
+- JWT strategy for session management
+- Custom redirect logic to prevent loops
+- Protected routes via middleware
+- Session stored in HTTP-only cookies
+
+API ENDPOINTS
+-------------
+
+/api/auth/[...nextauth] - NextAuth handlers
+/api/auth/signup - User registration
+/api/resumes - CRUD for resumes
+/api/resumes/[id] - Single resume operations
+/api/portfolios - CRUD for portfolios
+/api/portfolios/[id] - Single portfolio operations
+/api/ats - ATS score analysis (supports multipart/form-data)
+/api/tailor - AI resume tailoring
+/api/uploads/signed - Cloudinary signed upload URLs
+/api/seed - Database seeding (development)
+
+KEY FEATURES IMPLEMENTATION
+---------------------------
+
+ATS Checker:
+- Accepts PDF files or pasted text
+- Extracts text from PDFs using pdfjs-dist with disabled workers for Node.js compatibility
+- Sends to Groq API with structured JSON response format
+- Returns deterministic scores (same input = same output)
+- Graceful fallback chain: Groq → Gemini → Mock data
+- Upload progress via XMLHttpRequest
+- Processing phase indicators
+
+Resume/Portfolio Editors:
+- Split-screen layout: editor panel + live preview
+- Real-time state updates
+- Tabbed interface for different sections
+- Auto-save functionality
+- Template selection with live previews (Template 1 & 2)
+- Thumbnail generation with proper scaling
+
+PDF Extraction:
+- Multiple import path candidates for pdfjs-dist compatibility
+- Disabled workers to avoid FakeWorker errors in serverless
+- isEvalSupported: false for security
+- Page-by-page text extraction
+- Graceful error handling with fallback to manual input
+
+DEPLOYMENT CONSIDERATIONS
+--------------------------
+
+Environment Variables Required:
+- MONGODB_URI (MongoDB Atlas connection string)
+- NEXTAUTH_SECRET (random 32-char string)
+- NEXTAUTH_URL (deployment URL, e.g., https://domain.com)
+- GROQ_API_KEY (for ATS analysis)
+- GOOGLE_API_KEY (fallback AI)
+- CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
+
+Production Setup:
+- Must use cloud MongoDB (Atlas recommended)
+- Set NEXTAUTH_URL to actual deployment domain
+- Generate secure NEXTAUTH_SECRET via: openssl rand -base64 32
+- Ensure all API keys are set in deployment platform
+- Node.js runtime specified for ATS route (PDF processing)
+
+Known Production Issues Fixed:
+- PDF worker initialization in serverless environment
+- NextAuth redirect loops (fixed with custom redirect callback)
+- Localhost MongoDB URLs (validation added)
+- Environment variable validation on server startup
+- Type safety for undefined environment variables
+
+FONT & STYLING
+---------------
+- Global font: Poppins (weights 400, 500, 600, 700, 800)
+- Gradient CTAs: primary to emerald-500
+- Dark mode support via next-themes
+- Responsive design with Tailwind breakpoints
+- Custom Button variants including premium gradient style
+
+FILE STRUCTURE
+--------------
+/app - Next.js app directory
+  /api - API routes
+  /(auth) - Auth pages (login, signup)
+  /dashboard - Protected dashboard routes
+    /resumes - Resume management
+    /portfolios - Portfolio management
+    /ats - ATS checker
+    /tailor - AI tailor tool
+  /p/[subdomain] - Public portfolio pages
+/components - Reusable React components
+  /ui - Radix UI components (Button, Card, Input, etc.)
+  /resume-editor - Resume builder component
+  /resume-templates - Resume template components
+  /portfolio-editor - Portfolio builder component
+  /portfolio-templates - Portfolio template components
+/lib - Utility functions and configurations
+  - db.ts - MongoDB connection
+  - auth-options.ts - NextAuth configuration
+  - ai.ts - AI integration (Groq + Gemini)
+  - cloudinary.ts - Image upload config
+  - utils.ts - Helper functions
+/models - Mongoose schemas
+/types - TypeScript type definitions
+
+SECURITY FEATURES
+-----------------
+- Password hashing with bcrypt (10 rounds)
+- JWT-based authentication
+- Session validation on protected routes
+- Environment variable validation
+- CSRF protection via NextAuth
+- Secure cookie handling
+- Input validation on all forms
+- File type and size validation for uploads
+
+PERFORMANCE OPTIMIZATIONS
+--------------------------
+- MongoDB connection caching (global singleton)
+- Static page generation where applicable
+- Image optimization via Cloudinary CDN
+- Lazy loading of heavy components
+- Turbopack for fast development builds
+- Efficient PDF parsing with worker disabling
+
+FUTURE ENHANCEMENTS
+-------------------
+- LinkedIn integration
+- Resume version control
+- Collaborative editing
+- Analytics dashboard
+- Email templates
+- Cover letter generator
+- Interview preparation tools
+- Job application tracking
+- Custom domain support for portfolios
+- Multi-language support
+
+PROJECT STATUS
+--------------
+✅ Core features implemented
+✅ Production deployment ready
+✅ Authentication working
+✅ Database connected (MongoDB Atlas)
+✅ AI integration functional (Groq + Gemini)
+✅ PDF processing working
+✅ Build passing without errors
+✅ Type-safe throughout
+
+REPOSITORY
+----------
+Owner: saurabhsigma
+Repo: resumeTailor
+Branch: main

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { generateAtsAnalysis } from "@/lib/ai";
+import { checkUsageLimit, incrementUsage } from "@/lib/subscription";
 
 export const runtime = "nodejs";
 
@@ -83,6 +84,23 @@ async function extractPdfText(file: File): Promise<string> {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
+        // Check usage limit
+        const userId = session.user.id as string;
+        const usageCheck = await checkUsageLimit(userId, "atsChecks");
+        
+        if (!usageCheck.allowed) {
+            return NextResponse.json(
+                {
+                    message: "ATS check limit reached",
+                    error: "limit_reached",
+                    current: usageCheck.current,
+                    limit: usageCheck.limit,
+                    plan: usageCheck.plan,
+                },
+                { status: 403 }
+            );
+        }
+
         const contentType = req.headers.get("content-type") || "";
         let resumeText = "";
         let jobDescription = "";
@@ -128,6 +146,10 @@ async function extractPdfText(file: File): Promise<string> {
         console.log("[ATS API] Calling generateAtsAnalysis...");
         const analysis = await generateAtsAnalysis(resumeText, jobDescription);
         console.log("[ATS API] Analysis complete, match score:", analysis.matchScore);
+        
+        // Increment usage counter after successful analysis
+        await incrementUsage(userId, "atsChecks");
+        
         return NextResponse.json({ analysis });
     } catch (error: any) {
         console.error("[ATS API] Error:", error.message, error.stack);
