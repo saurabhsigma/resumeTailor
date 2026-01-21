@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Wand2, Loader2, Check, Copy } from "lucide-react";
+import { Wand2, Loader2, Check, Copy, Zap } from "lucide-react";
+import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 export default function TailorClient({ resumes }: { resumes: any[] }) {
     const [jobDescription, setJobDescription] = useState("");
@@ -14,6 +16,8 @@ export default function TailorClient({ resumes }: { resumes: any[] }) {
     const [generatedContent, setGeneratedContent] = useState("");
     const [suggestedTemplate, setSuggestedTemplate] = useState("modern");
     const [isLoading, setIsLoading] = useState(false);
+    const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+    const [limitInfo, setLimitInfo] = useState<{ current: number; limit: number; plan: string } | null>(null);
 
     const handleResumeSelect = (resumeId: string) => {
         const resume = resumes.find(r => r._id === resumeId);
@@ -46,6 +50,11 @@ ${resume.projects?.map((p: any) => `${p.title}: ${p.description}`).join("\n") ||
                 })
             });
             const data = await res.json();
+            if (res.status === 403 && data.error === "limit_reached") {
+                setLimitInfo({ current: data.current, limit: data.limit, plan: data.plan });
+                setShowUpgradeDialog(true);
+                return;
+            }
             if (res.ok) {
                 setGeneratedContent(data.suggestion);
                 setSuggestedTemplate(data.suggestedTemplate || "modern");
@@ -155,6 +164,36 @@ ${resume.projects?.map((p: any) => `${p.title}: ${p.description}`).join("\n") ||
                     </CardContent>
                 </Card>
             )}
+            
+            <AlertDialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="flex items-center gap-2">
+                            <Zap className="h-5 w-5 text-primary" />
+                            AI Tailoring Limit Reached
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="space-y-3">
+                            <p>
+                                You've used {limitInfo?.current || 0} of {limitInfo?.limit || 0} AI tailoring sessions this month on the <span className="font-semibold uppercase">{limitInfo?.plan || "free"}</span> plan.
+                            </p>
+                            <p className="text-foreground font-medium">
+                                Upgrade to Pro for 30 AI tailoring sessions/month, 50 ATS checks, and unlimited resumes & portfolios!
+                            </p>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <Button variant="outline" onClick={() => setShowUpgradeDialog(false)}>
+                            Cancel
+                        </Button>
+                        <Link href="/dashboard/billing">
+                            <Button className="gap-2">
+                                <Zap className="h-4 w-4" />
+                                Upgrade to Pro
+                            </Button>
+                        </Link>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

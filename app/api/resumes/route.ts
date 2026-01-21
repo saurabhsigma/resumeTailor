@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import connectToDatabase from "@/lib/db";
 import { Resume } from "@/models/Resume";
+import { checkUsageLimit, incrementUsage, requireAuth } from "@/lib/subscription";
 
 export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
@@ -12,9 +13,27 @@ export async function POST(req: Request) {
 
     try {
         await connectToDatabase();
+        
+        // @ts-ignore
+        const userId = session.user.id;
+        
+        // Check usage limit
+        const usageCheck = await checkUsageLimit(userId, "resumes");
+        if (!usageCheck.allowed) {
+            return NextResponse.json(
+                {
+                    error: "limit_reached",
+                    message: "Resume creation limit reached for your plan",
+                    current: usageCheck.current,
+                    limit: usageCheck.limit,
+                    plan: usageCheck.plan,
+                },
+                { status: 403 }
+            );
+        }
+        
         const newResume = await Resume.create({
-            // @ts-ignore
-            userId: session.user.id,
+            userId,
             title: "Untitled Resume",
             personalInfo: {
                 fullName: session.user.name || "Your Name",
@@ -25,6 +44,9 @@ export async function POST(req: Request) {
             skills: [],
             projects: []
         });
+        
+        // Increment usage counter
+        await incrementUsage(userId, "resumes");
 
         return NextResponse.json(newResume, { status: 201 });
     } catch (error) {

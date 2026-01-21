@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth-options";
 import connectToDatabase from "@/lib/db";
 import { Portfolio } from "@/models/Portfolio";
 import { v4 as uuidv4 } from 'uuid';
+import { checkUsageLimit, incrementUsage } from "@/lib/subscription";
 
 export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
@@ -13,12 +14,30 @@ export async function POST(req: Request) {
 
     try {
         await connectToDatabase();
+        
+        // @ts-ignore
+        const userId = session.user.id;
+        
+        // Check usage limit
+        const usageCheck = await checkUsageLimit(userId, "portfolios");
+        if (!usageCheck.allowed) {
+            return NextResponse.json(
+                {
+                    error: "limit_reached",
+                    message: "Portfolio creation limit reached for your plan",
+                    current: usageCheck.current,
+                    limit: usageCheck.limit,
+                    plan: usageCheck.plan,
+                },
+                { status: 403 }
+            );
+        }
+        
         // Generate a random unique subdomain initially
         const subdomain = `user-${Date.now()}`;
 
         const newPortfolio = await Portfolio.create({
-            // @ts-ignore
-            userId: session.user.id,
+            userId,
             title: "My Creative Portfolio",
             subdomain: subdomain,
             content: {
@@ -38,6 +57,9 @@ export async function POST(req: Request) {
                 }
             }
         });
+        
+        // Increment usage counter
+        await incrementUsage(userId, "portfolios");
 
         return NextResponse.json(newPortfolio, { status: 201 });
     } catch (error) {
